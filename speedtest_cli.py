@@ -579,13 +579,22 @@ def speedtest():
     if not args.simple:
         print_('Retrieving speedtest.net server list...')
     if args.list or args.server:
-        servers = closestServers(config['client'], True)
+        if args.server:
+            try:
+                server_override = os.environ["SPEEDTEST_%s"%args.server]
+                print_("Local override for server id '%s'. Skipping full list retrieval."%args.server)
+                servers = []
+                servers.append(eval(server_override))
+            except KeyError, e:
+                servers = closestServers(config['client'], True)
+
         if args.list:
+            servers = closestServers(config['client'], True)
             serverList = []
             for server in servers:
                 line = ('%(id)4s) %(sponsor)s (%(name)s, %(country)s) '
                         '[%(d)0.2f km]' % server)
-                serverList.append(line)
+                serverList.append("%s %s"%(line, server))
             # Python 2.7 and newer seem to be ok with the resultant encoding
             # from parsing the XML, but older versions have some issues.
             # This block should detect whether we need to encode or not
